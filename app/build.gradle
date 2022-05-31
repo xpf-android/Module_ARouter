@@ -1,0 +1,62 @@
+apply plugin: 'com.android.application'
+
+def androidId = rootProject.ext.androidId
+
+android {
+    compileSdkVersion androidId.compileSdkVersion
+    buildToolsVersion androidId.buildToolsVersion
+
+    defaultConfig {
+        applicationId appId.app
+        minSdkVersion androidId.minSdkVersion
+        targetSdkVersion androidId.targetSdkVersion
+        versionCode androidId.versionCode
+        versionName androidId.versionName
+
+        testInstrumentationRunner androidId.testInstrumentationRunner
+
+        // 这个方法接收三个非空的参数
+        // 第一个参数：确定值的类型
+        // 第二个参数：指定key的名字
+        // 第三个参数：传值(必须是String)
+        // 为什么需要定义这个？因为在src代码中有可能需要跨模块交互，如果是组件化模块(开发环境)相当于两个App交互，显然不行
+        // 切记：不能在android节点下，只能在defaultConfig或buildTypes节点下
+        // rebuild之后，BuildConfig文件中有boolean isRelease 属性了，可以通过它判断环境，进行相关操作
+        buildConfigField("boolean", "isRelease", String.valueOf(isRelease))
+
+        //在gradle文件中配置选项参数值(用于APT传参接收)
+        //切记：必须写在defaultConfig节点下
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [moduleName: project.getName(), packageNameForAPT: packageNameForAPT]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation app_impl.publicImplementation
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    testImplementation app_impl.testImplementation
+    androidTestImplementation app_impl.androidTestImplementation
+
+
+    implementation project(':common')
+    implementation project(':annotation')
+    annotationProcessor project(':compiler')
+    if (isRelease) {
+        implementation project(':order')
+        implementation project(':personal')
+    }
+}

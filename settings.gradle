@@ -1,0 +1,8 @@
+rootProject.name='Module_ARouter'
+include ':app'
+include ':order'
+include ':personal'
+include ':annotation'
+include ':compiler'
+include ':common'
+include ':api'

@@ -1,0 +1,79 @@
+if (isRelease) {
+    apply plugin: 'com.android.library'//正式环境，集成化状态
+} else {
+    apply plugin: 'com.android.application'//测试环境，组件化状态
+}
+
+def androidId = rootProject.ext.androidId
+android {
+    compileSdkVersion androidId.compileSdkVersion
+    buildToolsVersion androidId.buildToolsVersion
+
+    defaultConfig {
+        if (!isRelease) {// 如果是集成化环境，不能有applicationId
+            applicationId appId.order//组件化模式能独立运行才能有applicationId
+        }
+
+        minSdkVersion androidId.minSdkVersion
+        targetSdkVersion androidId.targetSdkVersion
+        versionCode androidId.versionCode
+        versionName androidId.versionName
+
+        testInstrumentationRunner androidId.testInstrumentationRunner
+
+        // 这个方法接收三个非空的参数
+        // 第一个参数：确定值的类型
+        // 第二个参数：指定key的名字
+        // 第三个参数：传值(必须是String)
+        // 为什么需要定义这个？因为在src代码中有可能需要跨模块交互，如果是组件化模块(开发环境)相当于两个App交互，显然不行
+        // 切记：不能在android节点下，只能在defaultConfig或buildTypes节点下
+        // rebuild之后，BuildConfig文件中有boolean isRelease 属性了，可以通过它判断环境，进行相关操作
+        buildConfigField("boolean", "isRelease", String.valueOf(isRelease))
+
+        //在gradle文件中配置选项参数值(用于APT传参接收)
+        //切记：必须写在defaultConfig节点下
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [moduleName: project.getName(), packageNameForAPT: packageNameForAPT]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // 配置资源路径，方便测试环境，打包不集成到正式环境
+    sourceSets {
+        main {
+            if (!isRelease) {
+                // 如果是组件化模式，需要单独运行时
+                manifest.srcFile 'src/main/debug/AndroidManifest.xml'
+            } else {
+                // 集成化模式，整个项目打包apk
+                manifest.srcFile 'src/main/AndroidManifest.xml'
+                java {
+                    // 集成化时debug目录下文件不需要合并到工程
+                    exclude '**/debug/**'
+                }
+            }
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation app_impl.publicImplementation
+    testImplementation app_impl.testImplementation
+    androidTestImplementation app_impl.androidTestImplementation
+
+    implementation project(':common')
+    implementation project(':annotation')
+    annotationProcessor project(':compiler')
+
+}
