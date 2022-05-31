@@ -15,7 +15,7 @@ public class OrderUserImpl implements IUser {
     @Override
     public BaseUser getUserInfo() {
         UserInfo userInfo = new UserInfo();
-        userInfo.setName("冯老师");
+        userInfo.setName("迷途小书童");
         userInfo.setAccount("netease_river");
         userInfo.setPassword("666666");
         userInfo.setVipLevel(9);

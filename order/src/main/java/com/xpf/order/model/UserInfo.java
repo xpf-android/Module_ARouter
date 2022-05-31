@@ -28,7 +28,7 @@ public class UserInfo extends BaseUser {
     @Override
     public String toString() {
         return "UserInfo{" +
-                ",name=" + getName()+
+                "name=" + getName()+
                 ",account=" + getAccount()+
                 ",password="+getPassword()+
                 ",token='" + token + '\'' +

@@ -11,21 +11,34 @@ import android.widget.ImageView;
 
 import com.xpf.annotation.ARouter;
 import com.xpf.annotation.Parameter;
-import com.xpf.annotation.model.RouterBean;
 import com.xpf.api.ParameterManager;
 import com.xpf.api.RouterManager;
-import com.xpf.api.core.ARouterLoadPath;
 import com.xpf.common.order.OrderAddress;
 import com.xpf.common.order.OrderBean;
 import com.xpf.common.order.OrderDrawable;
 import com.xpf.common.user.IUser;
 import com.xpf.common.utils.Cons;
-import com.xpf.module_arouter.test.ARouter$$Group$$order;
-import com.xpf.module_arouter.test.ARouter$$Group$$personal;
-import com.xpf.order.impl.OrderUserImpl;
 
 import java.io.IOException;
-import java.util.Map;
+
+/**
+ * todo 手撕组件化框架
+ * 在编译时生成的MainActivity$$Parameter文件中
+ * public class MainActivity$$Parameter implements ParameterLoad {
+ *   @Override
+ *   public void loadParameter(Object target) {
+ *     MainActivity t = (MainActivity)target;
+ *     t.name = t.getIntent().getStringExtra("name");
+ *     t.age = t.getIntent().getIntExtra("agex", t.age);
+ *     t.isSuccess = t.getIntent().getBooleanExtra("isSuccess", t.isSuccess);
+ *     t.object = t.getIntent().getStringExtra("netease");
+ *     t.drawable = (OrderDrawable) RouterManager.getInstance().build("/order/getDrawable").navigation(t);
+ *     t.iUser = (IUser) RouterManager.getInstance().build("/order/getUserInfo").navigation(t);
+ *     t.orderAddress = (OrderAddress) RouterManager.getInstance().build("/order/getOrderBean").navigation(t);
+ *   }
+ * }
+ *
+ */
 
 @ARouter(path = "/app/MainActivity")
 public class MainActivity extends AppCompatActivity {
@@ -41,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     @Parameter(name = "netease")
     String object;
 
+    //可跨模块获取接口的实现类
     @Parameter(name = "/order/getDrawable")
     OrderDrawable drawable;
 
@@ -75,13 +89,14 @@ public class MainActivity extends AppCompatActivity {
         ParameterManager.getInstance().loadParameter(this);
         Log.e(Cons.TAG,"app接收参数：name= " + name);
 
-
+        //测试跨模块传递图片
         ImageView img = findViewById(R.id.img);
         img.setImageResource(drawable.getDrawable());
 
+        //测试通过接口跨模块获取对象
         String string = iUser.getUserInfo().toString();
         Log.e(Cons.TAG,string);
-
+        //UserInfo{name=迷途小书童,account=netease_river,password=666666,token='null', vipLevel=9}
 
         // 测试获取接口通信
         new Thread(new Runnable() {
@@ -90,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     OrderBean orderBean = orderAddress.getOrderBean("18682ed3411dd8e8768cdd38d901afe1", "192.168.28.124");
                     Log.e(Cons.TAG, orderBean.toString());
+                    //OrderBean{resultcode='200', reason='查询成功', result=Result{Country='', Province='', City='内网IP', Isp='内网IP'}, error_code=0}
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -178,14 +194,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    @Override
-    public String toString() {
-        return "MainActivity{" +
-                "name='" + name + '\'' +
-                ", age=" + age +
-                ", isSuccess=" + isSuccess +
-                ", object='" + object + '\'' +
-                '}';
-    }
 }
